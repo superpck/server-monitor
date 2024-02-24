@@ -7,7 +7,7 @@
 ###
 
 ## Configure
-  1. create db table with url_monitor.sql
+  1. create data table with url_monitor.sql
   2. rename env.example to .env and edit with correct values.
 
 # Usage
