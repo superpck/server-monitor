@@ -16,7 +16,7 @@ var con = mysql.createConnection({
 con.connect(async function (err, conn) {
   if (err) throw err;
 
-  var sql = "select * from admin.url_monitor where isactive=1";
+  var sql = `select * from ${process.env.DB_TABLE} where isactive=1`;
   con.query(sql, async (err, result) => {
     if (err) {
       throw err;
