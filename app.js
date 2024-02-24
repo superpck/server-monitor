@@ -4,7 +4,7 @@ var mysql = require("mysql2");
 const querystring = require('querystring');
 
 let date = new Date();
-console.log(date,"<br>");
+console.log(date,"<br>");   // br -> for output to html
 var con = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
