@@ -15,18 +15,19 @@ var con = mysql.createConnection({
 con.connect(async function (err, conn) {
   if (err) throw err;
 
-  var sql = `select * from ${process.env.DB_TABLE} where isactive=1`;
+  var sql = `select * from ${process.env.DB_TABLE} where isactive=1 order by server_group`;
   con.query(sql, async (err, rows) => {
     if (err) {
       throw err;
     } else {
       let results = [];
       for (let row of rows){
-        const result = await testAPI(row);
+        const status = await testAPI(row);
         results.push({ 
           date: moment().format('YYYY-MM-DD HH:mm:ss'), 
+          group: row.server_group,
           name: row.name, url: row.url, 
-          result });
+          status });
       }
       console.log(JSON.stringify(results));
     }
@@ -45,14 +46,14 @@ async function testAPI(api) {
     if (result.status == undefined) {
       let errorMsg = `Server ${api.url} status unreachable`;
       await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
-      return errorMsg;
+      return 'unreachable';
     } else {
-      return 'status: '+result.status;
+      return result.status;
     }
   } catch (error) {
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
     const alertResult = await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
-    return "error: "+error.message;
+    return error;
   }
 }
 
