@@ -45,7 +45,7 @@ async function testAPI(api) {
     const result = await axios.get(api.url);
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
     if (result.status == undefined) {
-      let errorMsg = `Server ${api.url} unreachable`;
+      let errorMsg = `Server ${api.url} status unreachable`;
       console.log(api.url, errorMsg,"<br>");
       await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
     } else {
