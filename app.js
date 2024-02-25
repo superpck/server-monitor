@@ -4,8 +4,6 @@ const axios = require("axios");
 var mysql = require("mysql2");
 const querystring = require('querystring');
 
-let date = moment().format('YYYY-MM-DD HH:mm:ss');
-console.log(date," start<br>");   // br -> for output to html
 var con = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
@@ -18,27 +16,27 @@ con.connect(async function (err, conn) {
   if (err) throw err;
 
   var sql = `select * from ${process.env.DB_TABLE} where isactive=1`;
-  con.query(sql, async (err, result) => {
+  con.query(sql, async (err, rows) => {
     if (err) {
       throw err;
     } else {
-      for (let row of result){
-        await testAPI(row);
+      let results = [];
+      for (let row of rows){
+        const result = await testAPI(row);
+        results.push({ 
+          date: moment().format('YYYY-MM-DD HH:mm:ss'), 
+          name: row.name, url: row.url, 
+          result });
       }
+      console.log(JSON.stringify(results));
     }
 
     return process.exit(0);
   });
 });
 
-process.on("exit", function (code) {
-  let date = moment().format('YYYY-MM-DD HH:mm:ss');
-  return console.log(date, `exit code: ${code}`);
-});
-
 async function testAPI(api) {
   if (!api || !api.line_token || !api.url) {
-    console.log(api.url, "Incorrect parameter");
     return false;
   }
   try {
@@ -46,15 +44,15 @@ async function testAPI(api) {
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
     if (result.status == undefined) {
       let errorMsg = `Server ${api.url} status unreachable`;
-      console.log(api.url, errorMsg,"<br>");
       await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
+      return errorMsg;
     } else {
-      console.log(api.url, ` status: ${result.status}`,"<br>");
+      return 'status: '+result.status;
     }
   } catch (error) {
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
-    console.log(api.url, "error:", error.message,"<br>");
-    await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
+    const alertResult = await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
+    return "error: "+error.message;
   }
 }
 
