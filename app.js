@@ -37,19 +37,19 @@ process.on("exit", function (code) {
 });
 
 async function testAPI(api) {
-  if (!api || !api.line_token || !api.url || !api.varname) {
-    console.log(api.url, "Not found parameter");
+  if (!api || !api.line_token || !api.url) {
+    console.log(api.url, "Incorrect parameter");
     return false;
   }
   try {
     const result = await axios.get(api.url);
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
-    if (result.data[api.varname] == undefined) {
-      let errorMsg = `Server ${api.url} unreachable: '${api.varname}' not found.`;
+    if (result.status == undefined) {
+      let errorMsg = `Server ${api.url} unreachable`;
       console.log(api.url, errorMsg,"<br>");
       await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
     } else {
-      console.log(api.url, api.varname, `=> "${result.data[api.varname]}"`,"<br>");
+      console.log(api.url, ` status: ${result.status}`,"<br>");
     }
   } catch (error) {
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
