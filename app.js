@@ -1,10 +1,11 @@
 require('dotenv').config({ path: __dirname+'/.env' });
+const moment = require("moment");
 const axios = require("axios");
 var mysql = require("mysql2");
 const querystring = require('querystring');
 
-let date = new Date();
-console.log(date,"<br>");   // br -> for output to html
+let date = moment().format('YYYY-MM-DD HH:mm:ss');
+console.log(date," start<br>");   // br -> for output to html
 var con = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
@@ -31,7 +32,7 @@ con.connect(async function (err, conn) {
 });
 
 process.on("exit", function (code) {
-  let date = new Date();
+  let date = moment().format('YYYY-MM-DD HH:mm:ss');
   return console.log(date, `exit code: ${code}`);
 });
 
@@ -42,16 +43,18 @@ async function testAPI(api) {
   }
   try {
     const result = await axios.get(api.url);
+    let date = moment().format('DD/MM/YYYY HH:mm:ss');
     if (result.data[api.varname] == undefined) {
       let errorMsg = `Server ${api.url} unreachable: '${api.varname}' not found.`;
       console.log(api.url, errorMsg,"<br>");
-      await lineAlert(api.line_token, `\r\n${errorMsg}\r\n`);
+      await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
     } else {
       console.log(api.url, api.varname, `=> "${result.data[api.varname]}"`,"<br>");
     }
   } catch (error) {
+    let date = moment().format('DD/MM/YYYY HH:mm:ss');
     console.log(api.url, "error:", error.message,"<br>");
-    await lineAlert(api.line_token, `\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
+    await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
   }
 }
 
