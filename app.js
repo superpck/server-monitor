@@ -72,7 +72,7 @@ async function lineAlert(lineToken, message) {
     url: "https://notify-api.line.me/api/notify"
   };
   await axios(option)
-    .then((response) => { return response })
+    .then(response => response )
     .catch((error) => {
       console.error(" ===> Error", error.message,"<br>");
       return error;
