@@ -22,12 +22,16 @@ con.connect(async function (err, conn) {
     } else {
       let results = [];
       for (let row of rows){
-        const status = await testAPI(row);
+        const result = await testAPI(row);
         results.push({ 
           date: moment().format('YYYY-MM-DD HH:mm:ss'), 
           group: row.server_group,
           name: row.name, url: row.url, 
-          status });
+          status: result.status || null,
+         });
+         if (result.message){
+          results[results.length-1].message = result.message;
+         }
       }
       console.log(JSON.stringify(results));
     }
@@ -38,7 +42,7 @@ con.connect(async function (err, conn) {
 
 async function testAPI(api) {
   if (!api || !api.line_token || !api.url) {
-    return false;
+    return { status: 500, message: 'invalid config' };
   }
   try {
     const result = await axios.get(api.url);
@@ -46,13 +50,13 @@ async function testAPI(api) {
     if (result.status == undefined) {
       let errorMsg = `Server ${api.url} status unreachable`;
       await lineAlert(api.line_token, `${date}\r\n${errorMsg}\r\n`);
-      return 'unreachable';
+      return { status: 400, message: 'unreachable'};
     } else {
-      return result.status;
+      return result;
     }
   } catch (error) {
     let date = moment().format('DD/MM/YYYY HH:mm:ss');
-    const alertResult = await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
+    await lineAlert(api.line_token, `${date}\r\nServer ${api.url} unreachable: ${error.message}.\r\n`);
     return error;
   }
 }
@@ -68,7 +72,7 @@ async function lineAlert(lineToken, message) {
     url: "https://notify-api.line.me/api/notify"
   };
   await axios(option)
-    .then((response) => { return response.data })
+    .then((response) => { return response })
     .catch((error) => {
       console.error(" ===> Error", error.message,"<br>");
       return error;
